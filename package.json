@@ -6,8 +6,9 @@
   "scripts": {
     "start-dev": "rm -f src/*.js && nodemon ./src/main.ts --watch ./src",
     "start-dev-win": "del /Q src\\*.js && nodemon ./src/main.ts --watch ./src",
-    "build": "tsc -p tsconfig.json",
-    "start": "node main.js"
+    "build": "tsc -p tsconfig.json && cp .env dist/.env",
+    "build-win": "tsc -p tsconfig.json && copy .env dist\\.env",
+    "start": "node dist/main.js"
   },
   "keywords": [],
   "author": "",
