@@ -12,6 +12,8 @@ import {crawlDBDCodes} from "./crawl";
     if (!botToken || !appId || !adminId)
         throw new Error("Missing environment variables.");
 
+    process.title = "butter-bot";
+
     const client = new Client({ intents:
             [
                 GatewayIntentBits.Guilds,
@@ -24,6 +26,7 @@ import {crawlDBDCodes} from "./crawl";
         if (dbdChannelID) {
             const admin = await client.users.fetch(adminId);
             const dbdChannel = await client.channels.fetch(dbdChannelID);
+            await crawlDBDCodes(admin, dbdChannel as TextChannel);
             if (dbdChannel && dbdChannel.isTextBased())
                 setInterval(() => crawlDBDCodes(admin, dbdChannel as TextChannel), 1000 * 60 * 60 * 24 * 3);
         }

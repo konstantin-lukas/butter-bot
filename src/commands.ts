@@ -22,7 +22,7 @@ export async function registerCommands(token: string, appId: Snowflake) {
 export function listenToCommands(client: Client) {
     client.on('interactionCreate', async interaction => {
         if (!interaction.isChatInputCommand()) return;
-        if (interaction.commandName === 'test') {
+        if (interaction.commandName === 'ping') {
             await interaction.reply('Pong!');
         }
     });
