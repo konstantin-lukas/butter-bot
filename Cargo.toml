@@ -1,0 +1,30 @@
+[package]
+name = "butter-bot"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies.tokio]
+version = "1.21.2"
+features = [
+    "macros",
+    "rt-multi-thread"
+]
+[dependencies.serenity]
+default-features = false
+features = [
+    "builder",
+    "client",
+    "gateway",
+    "model",
+    "rustls_backend",
+    "http"
+]
+version = "0.12"
+[dependencies]
+reqwest = "0.11.24"
+scraper = "0.19.0"
+regex = "1.10.3"
+chrono = "0.4.35"
+dotenvy = "0.15.7"

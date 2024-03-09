@@ -2,9 +2,12 @@ use scraper::{Html, Selector};
 use serenity::futures::future;
 use regex::Regex;
 use std::collections::HashMap;
+use std::fs;
+use chrono::{DateTime, Utc, FixedOffset};
+use crate::utils::message::MessageHandler;
 
 
-pub async fn run() {
+pub async fn run(message_handler: &MessageHandler) {
     let pcg = reqwest::get("https://www.pcgamesn.com/dead-by-daylight/dbd-codes");
     let rps = reqwest::get("https://www.rockpapershotgun.com/dead-by-daylight-codes-list");
     let dex = reqwest::get("https://www.dexerto.com/dead-by-daylight/how-to-redeem-dead-by-deadlight-codes-1664016/");
@@ -25,6 +28,28 @@ pub async fn run() {
     ).unwrap();
 
     let mut codes: HashMap<String, String> = HashMap::new();
+    let mut new_codes: HashMap<String, String> = HashMap::new();
+
+    match fs::read_to_string("dbd_codes.csv") {
+        Ok(file) => {
+            let lines = file.split('\n');
+            for line in lines {
+                let parts: Vec<&str> = line.split('\t').collect();
+                if parts.len() == 2 {
+                    codes.insert(
+                        String::from(parts[0]),
+                        String::from(parts[1])
+                    );
+                }
+            }
+
+        },
+        Err(e) => {
+            message_handler.dm_admin(
+                format!("An error occurred trying to read DBD codes from file: ```\n{e}\n```").as_str()
+            ).await;
+        }
+    }
 
     for result in results {
         if let Ok(text) = result {
@@ -36,10 +61,12 @@ pub async fn run() {
                     let text_content: String = element.text().collect();
                     let res: Vec<String> = pattern.split(text_content.as_str()).map(|s| s.to_string()).collect();
                     if res.len() == 2 {
-                        codes.insert(
-                            String::from(res[0].trim()),
-                            String::from(res[1].trim())
-                        );
+                        let key = String::from(res[0].trim());
+                        let value = String::from(res[1].trim());
+                        if !codes.contains_key(key.as_str()) {
+                            codes.insert(key.clone(), value.clone());
+                            new_codes.insert(key, value);
+                        }
                     }
                 }
             }
@@ -47,10 +74,40 @@ pub async fn run() {
         }
     }
 
+    let mut file_content = String::new();
     for code in codes {
-        println!("{} - {}",code.0,code.1);
+        file_content.push_str(format!("{}\t{}\n", code.0, code.1).as_str());
     }
 
+    if new_codes.len() > 0 {
+        let mut message = String::from("I found some fresh new codes since my last crawl! 🩸\n\n");
+        for new_code in new_codes {
+            let utc_now: DateTime<Utc> = Utc::now();
+            let mut formatted_date = None;
+            if let Some(gmt1_offset) = FixedOffset::east_opt(3600) {
+                let gmt1_now = utc_now.with_timezone(&gmt1_offset);
+                formatted_date = Some(gmt1_now.format("%Y/%m/%d").to_string());
+            }
+            if let Some(date) = formatted_date {
+                message.push_str(
+                    format!("- `{}`: {} ({})\n", new_code.0, new_code.1,date).as_str()
+                );
+            } else {
+                message.push_str(
+                    format!("- `{}`: {}\n", new_code.0, new_code.1).as_str()
+                );
+            }
+        }
+        message_handler.post_to_dbd_channel(message.as_str()).await;
+    }
 
+    match fs::write("dbd_codes.csv", file_content) {
+        Ok(_) => { },
+        Err(e) => {
+            message_handler.dm_admin(
+                format!("An error occurred trying to write DBD codes to file: ```\n{e}\n```").as_str()
+            ).await;
+        }
+    }
 
 }
