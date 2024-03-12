@@ -1,6 +1,6 @@
 # Butter Bot
 
-This is an open-source discord developed for personal use. It is not 
+This is an open-source discord bot developed for personal use. It is not 
 available as a public bot to add to your server. If you do want to add this
 bot to your server, you will have to deploy it yourself.
 
