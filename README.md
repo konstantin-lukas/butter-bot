@@ -8,7 +8,7 @@ bot to your server, you will have to deploy it yourself.
 
 - Regularly crawl Dead by Daylight codes and send new ones to a channel
 - `/translate`: Translate a text between two languages
-- `/common games`: Get a list of games that a list of users have in common
+- `/common-games`: Get a list of games that a list of users have in common
 
 ## Environment Variables
 ### BOT_TOKEN
@@ -26,3 +26,6 @@ This is an API key the DeepL api, which the bot uses for the `/translate` comman
 ### GUILD_ID
 This is the server ID for the server the bot is deployed on. Slash commands
 are not registered globally and instead are per guild.
+
+### STEAM_API_KEY
+This is a steam api key used for the `/common-games` command.
