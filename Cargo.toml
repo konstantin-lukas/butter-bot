@@ -30,3 +30,4 @@ chrono = "0.4.35"
 dotenvy = "0.15.7"
 deepl = "0.6.1"
 log = "0.4.21"
+serde = { version = "1.0.197", features = ["derive"] }

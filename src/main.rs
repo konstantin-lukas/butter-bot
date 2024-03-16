@@ -44,7 +44,9 @@ impl EventHandler for Handler {
         };
 
         PartialGuild::create_command(&guild, &ctx.http, commands::translate::register())
-            .await.expect("Failed to create guild commands!");
+            .await.expect("Failed to create translate command!");
+        PartialGuild::create_command(&guild, &ctx.http, commands::games::register())
+            .await.expect("Failed to create common games command!");
 
         const INTERVAL: u64 = 60 * 60 * 24 * 2;
         tokio::spawn(async move {
@@ -61,6 +63,7 @@ impl EventHandler for Handler {
 
             let content = match command.data.name.as_str() {
                 "translate" => Some(commands::translate::run(&command.data.options()).await),
+                "common-games" => Some(commands::games::run(&command.data.options()).await),
                 _ => Some("not implemented :(".to_string()),
             };
 
