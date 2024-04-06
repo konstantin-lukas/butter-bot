@@ -20,12 +20,16 @@ are not registered globally and instead are per guild.
 
 ### DBD_CHANNEL (OPTIONAL)
 This is a channel ID the bot uses to post Dead by Daylight codes it finds on the web.
+If you don't provide this variable, the bot won't crawl codes.
 
 ### ADMIN_ID (OPTIONAL)
-This is a user ID the bot messages when an error occurs.
+This is a user ID the bot messages when an error occurs. If you don't provide this
+variable the bot won't message logs to an admin on error.
 
 ### DEEPL_API_KEY (OPTIONAL)
 This is an API key the DeepL api, which the bot uses for the `/translate` command.
+If you don't provide this variable, the command will be unavailable.
 
 ### STEAM_API_KEY (OPTIONAL)
 This is a steam api key used for the `/common-games` command.
+If you don't provide this variable, the command will be unavailable.
