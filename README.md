@@ -7,6 +7,7 @@ bot to your server, you will have to deploy it yourself.
 - Regularly crawl Dead by Daylight codes and send new ones to a channel
 - `/translate`: Translate a text between two languages
 - `/common-games`: Get a list of games that a list of users have in common
+- `/poll` and `/vote`: Create and manage a server-unique poll
 
 ## Environment Variables
 ### BOT_TOKEN (REQUIRED)
