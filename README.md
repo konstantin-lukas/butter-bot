@@ -14,6 +14,10 @@ bot to your server, you will have to deploy it yourself.
 ### BOT_TOKEN (REQUIRED)
 This is the token for your bot which you can get from the Discord developer portal.
 
+### GUILD_ID (REQUIRED)
+This is the server ID for the server the bot is deployed on. Slash commands
+are not registered globally and instead are per guild.
+
 ### DBD_CHANNEL (OPTIONAL)
 This is a channel ID the bot uses to post Dead by Daylight codes it finds on the web.
 
@@ -22,10 +26,6 @@ This is a user ID the bot messages when an error occurs.
 
 ### DEEPL_API_KEY (OPTIONAL)
 This is an API key the DeepL api, which the bot uses for the `/translate` command.
-
-### GUILD_ID (REQUIRED)
-This is the server ID for the server the bot is deployed on. Slash commands
-are not registered globally and instead are per guild.
 
 ### STEAM_API_KEY (OPTIONAL)
 This is a steam api key used for the `/common-games` command.
