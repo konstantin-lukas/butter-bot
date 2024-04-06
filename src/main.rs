@@ -2,7 +2,9 @@ mod commands;
 mod crawl;
 mod utils;
 
+use std::collections::HashMap;
 use std::env;
+use std::sync::Arc;
 use serenity::all::{GuildId, PartialGuild};
 use serenity::async_trait;
 use serenity::builder::{CreateInteractionResponse, CreateInteractionResponseMessage};
@@ -11,8 +13,20 @@ use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 use std::time::Duration;
 use dotenvy::dotenv;
+use crate::commands::poll::Polls;
+use crate::utils::parse::get_command_args;
 
-struct Handler;
+struct Handler {
+    polls: Arc<Mutex<Polls>>,
+}
+
+impl Handler {
+    fn new() -> Self {
+        Self {
+            polls: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+}
 
 #[async_trait]
 impl EventHandler for Handler {
@@ -39,15 +53,20 @@ impl EventHandler for Handler {
         if env::var("DEEPL_API_KEY").is_ok() {
             match PartialGuild::create_command(&guild, &ctx.http, commands::translate::register()).await {
                 Ok(_) => println!("Created new command: translate"),
-                Err(_) => println!("Failed to create new command: translate")
+                Err(e) => println!("Failed to create new command: translate - {e}")
             }
         }
 
         if env::var("STEAM_API_KEY").is_ok() {
             match PartialGuild::create_command(&guild, &ctx.http, commands::common_games::register()).await {
                 Ok(_) => println!("Created new command: common-games"),
-                Err(_) => println!("Failed to create new command: common-games")
+                Err(e) => println!("Failed to create new command: common-games - {e}")
             }
+        }
+
+        match PartialGuild::create_command(&guild, &ctx.http, commands::poll::register()).await {
+            Ok(_) => println!("Created new command: poll"),
+            Err(e) => println!("Failed to create new command: poll - {e}")
         }
 
         if env::var("DBD_CHANNEL").is_ok() {
@@ -64,9 +83,14 @@ impl EventHandler for Handler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::Command(command) = interaction {
 
+            let args = get_command_args(&command.data.options());
             let content = match command.data.name.as_str() {
-                "translate" if env::var("DEEPL_API_KEY").is_ok() => Some(commands::translate::run(&command.data.options()).await),
-                "common-games" if env::var("STEAM_API_KEY").is_ok() => Some(commands::common_games::run(&command.data.options()).await),
+                "translate" if env::var("DEEPL_API_KEY").is_ok() => Some(commands::translate::run(args).await),
+                "common-games" if env::var("STEAM_API_KEY").is_ok() => Some(commands::common_games::run(args).await),
+                "poll" => {
+                    let mut polls = self.polls.lock().await;
+                    Some(commands::poll::run(args, &mut polls).await)
+                },
                 _ => Some("not implemented :(".to_string()),
             };
 
@@ -87,7 +111,7 @@ async fn main() {
     dotenv().expect(".env file not found");
     let token = env::var("BOT_TOKEN").expect("BOT_TOKEN environment variable not set");
     let mut client = Client::builder(token, GatewayIntents::empty())
-        .event_handler(Handler)
+        .event_handler(Handler::new())
         .await
         .expect("Error creating client");
     if let Err(why) = client.start().await {

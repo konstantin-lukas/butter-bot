@@ -1,8 +1,9 @@
 use std::env;
+use utils::parse::CommandArgs;
 use deepl::{DeepLApi, Lang};
 use serenity::builder::CreateCommand;
-use serenity::model::application::ResolvedOption;
-use serenity::all::{CommandOptionType, CreateCommandOption, ResolvedValue};
+use serenity::all::{CommandOptionType, CreateCommandOption};
+use crate::utils;
 
 struct Language<'a> {
     code: &'a str,
@@ -67,7 +68,7 @@ const LANGUAGES: [Language<'static>; 25] = [
     Language{ code: "ZH", name: "Chinese" }
 ];
 
-pub async fn run(options: &[ResolvedOption<'_>]) -> String {
+pub async fn run(mut args: CommandArgs) -> String {
     let api_key = match env::var("DEEPL_API_KEY") {
         Ok(i) => i,
         Err(_) => {
@@ -78,63 +79,44 @@ pub async fn run(options: &[ResolvedOption<'_>]) -> String {
         }
     };
 
-    let mut from = "";
-    let mut to= "";
-    let mut text= "";
-    for o in options.to_vec() {
-        if o.name == "text" {
-            text = match o {
-                ResolvedOption { value: ResolvedValue::String(str), .. } => {
-                    str
-                },
-                _ => return String::from("Please provide the 'text' option so I know what to translate.")
-            };
-        }
-        if o.name == "from" {
-            from = match o {
-                ResolvedOption { value: ResolvedValue::String(str), .. } => {
-                    str
-                },
-                _ => ""
-            };
-        }
-        if o.name == "to" {
-            to = match o {
-                ResolvedOption { value: ResolvedValue::String(str), .. } => {
-                    str
-                },
-                _ => "EN"
-            }
-        }
-    }
+    let text = args.remove("text");
 
-    let api = DeepLApi::with(&api_key).new();
-    let request = if from != "" {
-        api.translate_text(
-            text,
-            str_to_lang(to, false)
-        ).source_lang(str_to_lang(from, true)).await
-    } else {
-        api.translate_text(
-            text,
-            str_to_lang(to, false)
-        ).await
-    };
+    return match text {
+        Some(text) => {
+            let from = args.remove("from").unwrap_or(String::new());
+            let to = args.remove("to").unwrap_or(String::from("EN"));
+            let api = DeepLApi::with(&api_key).new();
+            let request = if from != "" {
+                api.translate_text(
+                    text,
+                    str_to_lang(to.as_str(), false)
+                ).source_lang(str_to_lang(from.as_str(), true)).await
+            } else {
+                api.translate_text(
+                    text,
+                    str_to_lang(to.as_str(), false)
+                ).await
+            };
 
-    let translated = match request {
-        Ok(i) => i,
-        Err(_) => {
-            return String::from(
-                "Sorry, I couldn't translate your request. This might be because I have reached \
+            let translated = match request {
+                Ok(i) => i,
+                Err(_) => {
+                    return String::from(
+                        "Sorry, I couldn't translate your request. This might be because I have reached \
                 the limit of my API key this month."
-            )
-        }
-    };
+                    )
+                }
+            };
 
-    if translated.translations.len() > 0 {
-        String::from(&translated.translations[0].text)
-    } else {
-        String::from("Cosmic rays prevented me from translating your request.")
+            if translated.translations.len() > 0 {
+                String::from(&translated.translations[0].text)
+            } else {
+                String::from("Cosmic rays prevented me from translating your request.")
+            }
+        },
+        None => {
+            String::from("Please provide the 'text' option so I know what to translate.")
+        }
     }
 }
 

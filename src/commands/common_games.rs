@@ -1,9 +1,10 @@
 use std::env;
-use serenity::all::{CommandOptionType, CreateCommand, CreateCommandOption, ResolvedOption, ResolvedValue};
+use serenity::all::{CommandOptionType, CreateCommand, CreateCommandOption};
 use std::collections::HashMap;
 use reqwest::{Client};
 use serenity::json::Value;
 use serde::Deserialize;
+use crate::utils::parse::CommandArgs;
 
 #[derive(Deserialize)]
 struct Game {
@@ -21,7 +22,7 @@ struct OwnedGames {
     games: Vec<Game>,
 }
 
-async fn get_steam_user_ids(usernames: &Vec<&&str>, api_key: &str) -> HashMap<String, String> {
+async fn get_steam_user_ids(usernames: &Vec<&str>, api_key: &str) -> HashMap<String, String> {
     let client = Client::new();
     let mut user_ids = HashMap::new();
 
@@ -87,7 +88,7 @@ fn is_numeric(input: &str) -> bool {
     true
 }
 
-pub async fn run(options: &[ResolvedOption<'_>]) -> String {
+pub async fn run(args: CommandArgs) -> String {
     let api_key = match env::var("STEAM_API_KEY") {
         Ok(x) => x,
         Err(_) => { return String::from("Sorry, I don't currently have a Steam API key :c"); }
@@ -95,12 +96,7 @@ pub async fn run(options: &[ResolvedOption<'_>]) -> String {
 
 
 
-    let mut users = Vec::new();
-    for x in options {
-        if let ResolvedOption { value: ResolvedValue::String(user), .. } = x {
-            users.push(user);
-        }
-    }
+    let users = args.iter().map(|(_,y)| y.as_str()).collect::<Vec<_>>();
     let mut ids = get_steam_user_ids(&users, &api_key).await;
 
     for (name, id) in ids.clone() {

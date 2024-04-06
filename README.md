@@ -1,11 +1,9 @@
 # Butter Bot
-
 This is an open-source discord bot developed for personal use. It is not 
 available as a public bot to add to your server. If you do want to add this
 bot to your server, you will have to deploy it yourself.
 
 ## Features
-
 - Regularly crawl Dead by Daylight codes and send new ones to a channel
 - `/translate`: Translate a text between two languages
 - `/common-games`: Get a list of games that a list of users have in common
