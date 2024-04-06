@@ -1,7 +1,18 @@
 use std::env;
 use std::sync::Arc;
-use serenity::all::{CreateMessage, Http, ChannelId, UserId};
+use serenity::all::{CreateMessage, Http, ChannelId, User, UserId};
 
+pub async fn send_message(http: Arc<Http>, message: &str, user: User) {
+
+    if let Err(e) = user.create_dm_channel(&http).await {
+        println!("Error creating DM channel: {:?}", e);
+        return;
+    }
+
+    if let Err(e) = user.dm(&http, CreateMessage::new().content(message)).await {
+        println!("Error sending message: {:?}", e);
+    }
+}
 
 pub async fn dm_admin(http: Arc<Http>, message: &str) {
     let admin_id = env::var("ADMIN_ID")
@@ -16,16 +27,9 @@ pub async fn dm_admin(http: Arc<Http>, message: &str) {
             return;
         }
     };
-
-    if let Err(e) = admin.create_dm_channel(&http).await {
-        println!("Error creating DM channel: {:?}", e);
-        return;
-    }
-
-    if let Err(e) = admin.dm(&http, CreateMessage::new().content(message)).await {
-        println!("Error sending message: {:?}", e);
-    }
+    send_message(http, message, admin).await;
 }
+
 pub async fn post_to_dbd_channel(http: Arc<Http>, message: &str) {
 
     let dbd_channel_id = env::var("DBD_CHANNEL")

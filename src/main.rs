@@ -2,7 +2,6 @@ mod commands;
 mod crawl;
 mod utils;
 
-use std::collections::HashMap;
 use std::env;
 use std::sync::Arc;
 use serenity::all::{GuildId, PartialGuild};
@@ -13,17 +12,17 @@ use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 use std::time::Duration;
 use dotenvy::dotenv;
-use crate::commands::poll::Polls;
+use crate::commands::poll::{Poll};
 use crate::utils::parse::get_command_args;
 
 struct Handler {
-    polls: Arc<Mutex<Polls>>,
+    poll: Arc<Mutex<Poll>>,
 }
 
 impl Handler {
     fn new() -> Self {
         Self {
-            polls: Arc::new(Mutex::new(HashMap::new())),
+            poll: Arc::new(Mutex::new(Poll::new())),
         }
     }
 }
@@ -69,6 +68,11 @@ impl EventHandler for Handler {
             Err(e) => println!("Failed to create new command: poll - {e}")
         }
 
+        match PartialGuild::create_command(&guild, &ctx.http, commands::vote::register()).await {
+            Ok(_) => println!("Created new command: vote"),
+            Err(e) => println!("Failed to create new command: vote - {e}")
+        }
+
         if env::var("DBD_CHANNEL").is_ok() {
             const INTERVAL: u64 = 60 * 60 * 24 * 1;
             tokio::spawn(async move {
@@ -82,14 +86,17 @@ impl EventHandler for Handler {
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::Command(command) = interaction {
-
             let args = get_command_args(&command.data.options());
             let content = match command.data.name.as_str() {
                 "translate" if env::var("DEEPL_API_KEY").is_ok() => Some(commands::translate::run(args).await),
                 "common-games" if env::var("STEAM_API_KEY").is_ok() => Some(commands::common_games::run(args).await),
                 "poll" => {
-                    let mut polls = self.polls.lock().await;
+                    let mut polls = self.poll.lock().await;
                     Some(commands::poll::run(args, &mut polls).await)
+                },
+                "vote" => {
+                    let mut polls = self.poll.lock().await;
+                    Some(commands::vote::run(args, &mut polls, command.user.id.get()).await)
                 },
                 _ => Some("not implemented :(".to_string()),
             };
