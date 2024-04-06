@@ -5,18 +5,18 @@ use reqwest::{Client};
 use serenity::json::Value;
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 struct Game {
     appid: u32,
     name: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 struct OwnedGamesResponse {
     response: OwnedGames,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 struct OwnedGames {
     games: Vec<Game>,
 }

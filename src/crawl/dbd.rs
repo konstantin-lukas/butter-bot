@@ -3,11 +3,13 @@ use serenity::futures::future;
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
+use std::sync::Arc;
 use chrono::{DateTime, Utc, FixedOffset};
-use crate::utils::message::MessageHandler;
+use serenity::all::Http;
+use crate::utils::message::{dm_admin, post_to_dbd_channel};
 
 
-pub async fn run(message_handler: &MessageHandler) {
+pub async fn run(http: Arc<Http>) {
 
     // MATCH COLON AND DIFFERENT TYPES OF DASHES
     let pattern = match Regex::new(
@@ -15,7 +17,8 @@ pub async fn run(message_handler: &MessageHandler) {
     ) {
         Ok(regex) => regex,
         Err(e) => {
-            message_handler.dm_admin(
+            dm_admin(
+                http.clone(),
                 format!("An error occurred trying to construct regex: ```\n{e}\n```").as_str()
             ).await;
             return;
@@ -51,7 +54,8 @@ pub async fn run(message_handler: &MessageHandler) {
 
         },
         Err(e) => {
-            message_handler.dm_admin(
+            dm_admin(
+                http.clone(),
                 format!("An error occurred trying to read DBD codes from file: ```\n{e}\n```").as_str()
             ).await;
         }
@@ -104,11 +108,12 @@ pub async fn run(message_handler: &MessageHandler) {
                 );
             }
         }
-        message_handler.post_to_dbd_channel(message.as_str()).await;
+        post_to_dbd_channel(http.clone(), message.as_str()).await;
     }
 
     if let Err(e) = fs::write("dbd_codes.csv", file_content) {
-        message_handler.dm_admin(
+        dm_admin(
+            http.clone(),
             format!("An error occurred trying to write DBD codes to file: ```\n{e}\n```").as_str()
         ).await;
     }

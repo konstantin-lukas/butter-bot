@@ -1,2 +1,2 @@
 pub mod translate;
-pub mod games;
+pub mod common_games;
