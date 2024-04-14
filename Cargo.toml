@@ -31,3 +31,5 @@ dotenvy = "0.15.7"
 deepl = "0.6.1"
 log = "0.4.21"
 serde = { version = "1.0.197", features = ["derive"] }
+rand = "0.8.5"
+rand_distr = "0.4.3"

@@ -8,6 +8,7 @@ bot to your server, you will have to deploy it yourself.
 - `/translate`: Translate a text between two languages
 - `/common-games`: Get a list of games that a list of users have in common
 - `/poll` and `/vote`: Create and manage a server-unique poll
+- `/random`: Generate a random number within a range
 
 ## Environment Variables
 ### BOT_TOKEN (REQUIRED)

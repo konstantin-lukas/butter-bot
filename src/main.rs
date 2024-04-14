@@ -73,6 +73,11 @@ impl EventHandler for Handler {
             Err(e) => println!("Failed to create new command: vote - {e}")
         }
 
+        match PartialGuild::create_command(&guild, &ctx.http, commands::random::register()).await {
+            Ok(_) => println!("Created new command: random"),
+            Err(e) => println!("Failed to create new command: random - {e}")
+        }
+
         if env::var("DBD_CHANNEL").is_ok() {
             const INTERVAL: u64 = 60 * 60 * 24 * 1;
             tokio::spawn(async move {
@@ -98,6 +103,7 @@ impl EventHandler for Handler {
                     let mut polls = self.poll.lock().await;
                     Some(commands::vote::run(args, &mut polls, command.user.id.get()).await)
                 },
+                "random" => Some(commands::random::run(args).await),
                 _ => Some("not implemented :(".to_string()),
             };
 
