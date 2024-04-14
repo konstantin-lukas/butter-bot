@@ -18,8 +18,8 @@ pub async fn run(args: CommandArgs) -> String {
                     let gaussian = Normal::new(mean, standard_deviation).unwrap();
                     loop {
                         let sample = gaussian.sample(&mut rng);
-                        let value = sample.round();
-                        if value >= min as f64 && value <= max as f64 {
+                        let value = sample.round() as i32;
+                        if value >= min && value <= max {
                             break value.to_string();
                         }
                     }
