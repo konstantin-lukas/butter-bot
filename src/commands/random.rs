@@ -1,5 +1,5 @@
 use rand::Rng;
-use rand_distr::{Distribution, Binomial};
+use rand_distr::{Distribution, Normal};
 use serenity::all::{CommandOptionType, CreateCommand, CreateCommandOption};
 use crate::utils::parse::CommandArgs;
 
@@ -9,27 +9,22 @@ pub async fn run(args: CommandArgs) -> String {
             if min > max {
                 return String::from("Min cannot be larger than max.");
             }
-            let default = String::from("uni");
-            let dist = args.get("dist").unwrap_or(&default).as_str();
-            let char_count = dist.chars().count();
-            if char_count < 3 {
-                return String::from("Invalid argument for distribution function.");
-            }
-            match &dist[0..=2] {
-                "bin" if char_count > 3 => {
-                    let p = if dist.chars().nth(3).unwrap_or('c') == 'r' {
-                        0.25
-                    } else if dist.chars().nth(3).unwrap_or('c') == 'l' {
-                        0.75
-                    } else {
-                        0.5
-                    };
-                    let range = (max as i64 - min as i64) as u64;
-                    let bin = Binomial::new(range, p).unwrap();
-                    (bin.sample(&mut rand::thread_rng()) as i128).saturating_add(min as i128).to_string()
+            let mut rng = rand::thread_rng();
+            match args.get("dist").unwrap_or(&String::from("uni")).as_str() {
+                "nrm" => {
+                    let range = max as f64 - min as f64;
+                    let mean = (max as f64 + min as f64) / 2.0;
+                    let standard_deviation = range / 4.5;
+                    let gaussian = Normal::new(mean, standard_deviation).unwrap();
+                    loop {
+                        let sample = gaussian.sample(&mut rng);
+                        let value = sample.round();
+                        if value >= min as f64 && value <= max as f64 {
+                            break value.to_string();
+                        }
+                    }
                 }
                 _ => {
-                    let mut rng = rand::thread_rng();
                     rng.gen_range(min..=max).to_string()
                 }
             }
@@ -66,8 +61,6 @@ pub fn register() -> CreateCommand {
             )
                 .required(false)
                 .add_string_choice("Uniform", "uni")
-                .add_string_choice("Binomial (centered)", "binc")
-                .add_string_choice("Binomial (right-skewed)", "binr")
-                .add_string_choice("Binomial (left-skewed)", "binl")
+                .add_string_choice("Normal", "nrm")
         )
 }
