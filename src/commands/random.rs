@@ -41,14 +41,14 @@ pub fn register() -> CreateCommand {
         .description("Get a random whole number between min and max.")
         .add_option(
             CreateCommandOption::new(
-                CommandOptionType::String,
+                CommandOptionType::Integer,
                 "min",
                 "The smallest possible number (inclusive)"
             ).required(true)
         )
         .add_option(
             CreateCommandOption::new(
-                CommandOptionType::String,
+                CommandOptionType::Integer,
                 "max",
                 "The largest possible number (inclusive)"
             ).required(true)

@@ -2,6 +2,7 @@ mod commands;
 mod crawl;
 mod utils;
 
+use std::collections::HashMap;
 use std::env;
 use std::sync::Arc;
 use serenity::all::{GuildId, PartialGuild};
@@ -12,17 +13,20 @@ use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 use std::time::Duration;
 use dotenvy::dotenv;
+use tokio::task::JoinHandle;
 use crate::commands::poll::{Poll};
 use crate::utils::parse::get_command_args;
 
 struct Handler {
     poll: Arc<Mutex<Poll>>,
+    reminders: Arc<Mutex<HashMap<u64, JoinHandle<()>>>>
 }
 
 impl Handler {
     fn new() -> Self {
         Self {
             poll: Arc::new(Mutex::new(Poll::new())),
+            reminders: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 }
@@ -39,6 +43,15 @@ impl EventHandler for Handler {
         let guild = ctx.http.get_guild(guild_id).await.expect("Guild not found");
 
         let commands = PartialGuild::get_commands(&guild, &ctx.http).await.unwrap_or_default();
+
+        /*if let Ok(cmds) = PartialGuild::get_commands(&guild, &ctx.http).await {
+            for cmd in cmds {
+                match PartialGuild::delete_command(&guild, &ctx.http, cmd.id).await {
+                    Ok(_) => { println!("Deleted old command: {}",cmd.name); }
+                    Err(_) => { println!("Failed to delete old command: {}",cmd.name); }
+                }
+            }
+        };*/
 
         // REGISTER NEW GUILD COMMANDS
         if env::var("DEEPL_API_KEY").is_ok() && !commands.iter().any(|c| c.name == "translate") {
@@ -76,6 +89,13 @@ impl EventHandler for Handler {
             }
         }
 
+        if !commands.iter().any(|c| c.name == "remind") {
+            match PartialGuild::create_command(&guild, &ctx.http, commands::remind::register()).await {
+                Ok(_) => println!("Created new command: remind"),
+                Err(e) => println!("Failed to create new command: remind - {e}")
+            }
+        }
+
         if env::var("DBD_CHANNEL").is_ok() {
             const INTERVAL: u64 = 60 * 60 * 24 * 1;
             tokio::spawn(async move {
@@ -102,6 +122,10 @@ impl EventHandler for Handler {
                     Some(commands::vote::run(args, &mut polls, command.user.id.get()).await)
                 },
                 "random" => Some(commands::random::run(args).await),
+                "remind" => {
+                    let mut reminders = self.reminders.lock().await;
+                    Some(commands::remind::run(args, ctx.http.clone(), command.user.clone(), &mut reminders).await)
+                },
                 _ => Some("not implemented :(".to_string()),
             };
 

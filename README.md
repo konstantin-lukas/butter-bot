@@ -9,6 +9,7 @@ bot to your server, you will have to deploy it yourself.
 - `/common-games`: Get a list of games that a list of users have in common
 - `/poll` and `/vote`: Create and manage a server-unique poll
 - `/random`: Generate a random number within a range
+- `/remind`: Let the bot dm you with a reminder after some time
 
 ## Environment Variables
 ### BOT_TOKEN (REQUIRED)
