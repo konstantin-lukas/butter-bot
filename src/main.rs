@@ -38,44 +38,42 @@ impl EventHandler for Handler {
             .parse().expect("Failed to parse ADMIN_ID as u64");
         let guild = ctx.http.get_guild(guild_id).await.expect("Guild not found");
 
-        // DELETE OLD GUILD COMMANDS
-        if let Ok(cmds) = PartialGuild::get_commands(&guild, &ctx.http).await {
-            for cmd in cmds {
-                match PartialGuild::delete_command(&guild, &ctx.http, cmd.id).await {
-                    Ok(_) => { println!("Deleted old command: {}",cmd.name); }
-                    Err(_) => { println!("Failed to delete old command: {}",cmd.name); }
-                }
-            }
-        };
+        let commands = PartialGuild::get_commands(&guild, &ctx.http).await.unwrap_or_default();
 
         // REGISTER NEW GUILD COMMANDS
-        if env::var("DEEPL_API_KEY").is_ok() {
+        if env::var("DEEPL_API_KEY").is_ok() && !commands.iter().any(|c| c.name == "translate") {
             match PartialGuild::create_command(&guild, &ctx.http, commands::translate::register()).await {
                 Ok(_) => println!("Created new command: translate"),
                 Err(e) => println!("Failed to create new command: translate - {e}")
             }
         }
 
-        if env::var("STEAM_API_KEY").is_ok() {
+        if env::var("STEAM_API_KEY").is_ok() && !commands.iter().any(|c| c.name == "common-games") {
             match PartialGuild::create_command(&guild, &ctx.http, commands::common_games::register()).await {
                 Ok(_) => println!("Created new command: common-games"),
                 Err(e) => println!("Failed to create new command: common-games - {e}")
             }
         }
 
-        match PartialGuild::create_command(&guild, &ctx.http, commands::poll::register()).await {
-            Ok(_) => println!("Created new command: poll"),
-            Err(e) => println!("Failed to create new command: poll - {e}")
+        if !commands.iter().any(|c| c.name == "poll") {
+            match PartialGuild::create_command(&guild, &ctx.http, commands::poll::register()).await {
+                Ok(_) => println!("Created new command: poll"),
+                Err(e) => println!("Failed to create new command: poll - {e}")
+            };
         }
 
-        match PartialGuild::create_command(&guild, &ctx.http, commands::vote::register()).await {
-            Ok(_) => println!("Created new command: vote"),
-            Err(e) => println!("Failed to create new command: vote - {e}")
+        if !commands.iter().any(|c| c.name == "vote") {
+            match PartialGuild::create_command(&guild, &ctx.http, commands::vote::register()).await {
+                Ok(_) => println!("Created new command: vote"),
+                Err(e) => println!("Failed to create new command: vote - {e}")
+            }
         }
 
-        match PartialGuild::create_command(&guild, &ctx.http, commands::random::register()).await {
-            Ok(_) => println!("Created new command: random"),
-            Err(e) => println!("Failed to create new command: random - {e}")
+        if !commands.iter().any(|c| c.name == "random") {
+            match PartialGuild::create_command(&guild, &ctx.http, commands::random::register()).await {
+                Ok(_) => println!("Created new command: random"),
+                Err(e) => println!("Failed to create new command: random - {e}")
+            }
         }
 
         if env::var("DBD_CHANNEL").is_ok() {
